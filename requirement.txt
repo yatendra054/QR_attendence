@@ -3,3 +3,4 @@ pyzbar==0.1.9
 matplotlib==3.6.0
 numpy==1.23.3
 Streamlit==1.37.0
+opencv-python-headless
