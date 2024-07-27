@@ -30,15 +30,17 @@ if 'start' not in st.session_state:
 
 st.title("QR Code Attendance System")
 
-if st.button("Start"):
-    st.session_state.start = True
-    st.session_state.stop = False
+col1, col2 = st.columns(2)
+with col1:
+    if st.button("Start"):
+        st.session_state.start = True
+        st.session_state.stop = False
+with col2:
+    if st.button("Quit"):
+        st.session_state.stop = True
+        st.session_state.start = False
 
-if st.button("Quit"):
-    st.session_state.stop = True
-    st.session_state.start = False
-
-FRAME_WINDOW = st.image([])
+FRAME_WINDOW = st.empty()
 
 authorized_users = load_authorized_users(whitelist_txt)
 seen_users = set(authorized_users)
@@ -50,17 +52,15 @@ if st.session_state.start:
     while cap.isOpened() and not st.session_state.stop:
         ret, frame = cap.read()
         if not ret:
+            st.error("Failed to capture image")
             break
-
         qr_info = decode(frame)
         access_message = ""
-
         if qr_info:
             qr = qr_info[0]
             data = qr.data.decode('utf-8')
             rect = qr.rect
             polygon = qr.polygon
-
             if data in authorized_users:
                 access_message = "ACCESS GRANTED"
                 cv2.putText(frame, access_message, (rect.left, rect.top - 15), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 3)
@@ -75,8 +75,7 @@ if st.session_state.start:
                     authorized_users.add(data)
                     seen_users.add(data)
 
-            frame = cv2.rectangle(frame, (rect.left, rect.top), (rect.left + rect.width, rect.top + rect.height),
-                                  (0, 255, 0), 5)
+            frame = cv2.rectangle(frame, (rect.left, rect.top), (rect.left + rect.width, rect.top + rect.height), (0, 255, 0), 5)
             frame = cv2.polylines(frame, [np.array(polygon)], True, (255, 0, 0), 5)
 
         FRAME_WINDOW.image(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
