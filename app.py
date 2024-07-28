@@ -1,9 +1,11 @@
+import re
 import streamlit as st
 import cv2
 from pyzbar.pyzbar import decode
 import numpy as np
 import datetime
 import time
+import winsound
 
 whitelist_txt = 'D:/QR-Attendence/whitelist.txt'
 log_path = 'D:/QR-Attendence/log.txt'
@@ -15,12 +17,19 @@ def load_authorized_users(whitelist_txt):
 
 def save_new_user(whitelist_txt, user):
     with open(whitelist_txt, 'a') as f:
-        f.write(user + '\n')
+        curr_time = datetime.datetime.now().strftime("%Y-%m-%d")
+        f.write(user + "\n")
 
 def log_access_event(log_path, user):
     current_time = datetime.datetime.now()
+    name = ''.join(user.split()[:2]).title()
     with open(log_path, 'a') as f:
-        f.write(f"{user},{current_time}\n")
+        f.write(f"{name}, {current_time}\n")
+
+def valid_qr_data(data):
+    pattern= r"^[A-Za-z]+ [A-Za-z]+ [A-Za-z ]+$"
+    return bool(re.match(pattern,data))
+
 
 if 'stop' not in st.session_state:
     st.session_state.stop = False
@@ -61,21 +70,31 @@ if st.session_state.start:
             data = qr.data.decode('utf-8')
             rect = qr.rect
             polygon = qr.polygon
-            if data in authorized_users:
-                access_message = "ACCESS GRANTED"
-                cv2.putText(frame, access_message, (rect.left, rect.top - 15), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 3)
-                if data not in most_recent_access or time.time() - most_recent_access[data] > time_between_logs_th:
-                    most_recent_access[data] = time.time()
-                    log_access_event(log_path, data)
-            else:
-                access_message = "ACCESS DENIED"
-                cv2.putText(frame, access_message, (rect.left, rect.top - 15), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 3)
-                if data not in seen_users:
-                    save_new_user(whitelist_txt, data)
-                    authorized_users.add(data)
-                    seen_users.add(data)
+            if valid_qr_data(data):
+                if data in authorized_users:
+                    access_message = "ACCESS GRANTED"
+                    cv2.putText(frame, access_message, (rect.left, rect.top - 15), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 3)
+                    if data not in most_recent_access or time.time() - most_recent_access[data] > time_between_logs_th:
+                        most_recent_access[data] = time.time()
+                        log_access_event(log_path, data)
+                else:
+                    access_message = "ACCESS DENIED"
+                    cv2.putText(frame, access_message, (rect.left, rect.top - 15), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 3)
+                    winsound.Beep(1000, 500)
+                    if data not in seen_users:
+                        save_new_user(whitelist_txt, data)
+                        authorized_users.add(data)
+                        seen_users.add(data)
+                frame = cv2.rectangle(frame, (rect.left, rect.top), (rect.left + rect.width, rect.top + rect.height),
+                                      (0, 255, 0), 5)
 
-            frame = cv2.rectangle(frame, (rect.left, rect.top), (rect.left + rect.width, rect.top + rect.height), (0, 255, 0), 5)
+            else:
+                access_message="ACCESS DENIED"
+                cv2.putText(frame, access_message, (rect.left, rect.top-15), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 3)
+                winsound.Beep(1000, 500)
+                frame = cv2.rectangle(frame, (rect.left, rect.top), (rect.left + rect.width, rect.top + rect.height),
+                                      (0, 0, 255), 5)
+
             frame = cv2.polylines(frame, [np.array(polygon)], True, (255, 0, 0), 5)
 
         FRAME_WINDOW.image(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
