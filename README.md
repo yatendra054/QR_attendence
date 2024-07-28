@@ -19,7 +19,7 @@ Then, we create a Streamlit app to process the QR code. The app checks if the QR
 
 ## Contribute
 
-I welcome you to join us in making this project to even better and add some extra feature which is help for college authority.
+I welcome you to join us in making this project to even better and add some extra feature which is help for security purpose.
 
 ## Screenshots
 
