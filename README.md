@@ -13,7 +13,7 @@ Then, we create a Streamlit app to process the QR code. The app checks if the QR
 
 ## Features
 
-- Students can mark their attendance in college, recording the time they enter with their name and branch.
+- Students can mark their attendance in Institution, recording the time they enter with their name and branch.
 - Only authorized students are permitted entry.
 - Tracks students' entry and leave times from the college.
 
