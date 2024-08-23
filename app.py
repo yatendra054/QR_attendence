@@ -15,9 +15,9 @@ def load_authorized_users(whitelist_txt):
         authorized_users = [l.strip() for l in f.readlines() if len(l) > 0]
     return set(authorized_users)
 
+
 def save_new_user(whitelist_txt, user):
     with open(whitelist_txt, 'a') as f:
-        curr_time = datetime.datetime.now().strftime("%Y-%m-%d")
         f.write(user + "\n")
 
 def log_access_event(log_path, user):
